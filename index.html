@@ -27,6 +27,40 @@
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
 
+  <!-- Side Visual (image that changes per active section) -->
+  <style>
+    .side-visual {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 55%;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .side-visual img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      opacity: 1;
+      transition: opacity 0.6s ease-in-out;
+    }
+    .side-visual img.is-hidden {
+      opacity: 0;
+    }
+    /* Hide on smaller screens since the nav sidebar also collapses there */
+    @media (max-width: 1200px) {
+      .side-visual {
+        display: none;
+      }
+    }
+  </style>
+
   <!-- =======================================================
   * Template Name: MyResume
   * Template URL: https://bootstrapmade.com/free-html-bootstrap-template-my-resume/
@@ -37,6 +71,11 @@
 </head>
 
 <body class="index-page">
+
+  <!-- Side Visual: image swaps automatically based on the section in view -->
+  <div class="side-visual">
+    <img src="assets/img/header-photo.jpg" alt="" id="side-visual-img">
+  </div>
 
   <header id="header" class="header d-flex flex-column justify-content-center">
 
@@ -58,9 +97,10 @@
   <main class="main">
 
     <!-- Hero Section -->
-    <section id="hero" class="hero section light-background">
+    <section id="hero" class="hero section light-background" data-visual="assets/img/header-photo.jpg">
 
-      <img src="assets/img/header-photo.jpg" alt="" style="object-fit: contain; object-position: bottom center; max-height: 90vh; width: 100%;">
+      <img src="assets/img/header-photo.jpg" alt="" style="display:none;">
+      <!-- Original photo hidden here; it now lives in the fixed .side-visual panel and updates per section -->
 
       <div class="container" data-aos="zoom-out">
         <div class="row justify-content-center">
@@ -84,7 +124,7 @@
     </section><!-- /Hero Section -->
 
     <!-- About Section -->
-    <section id="about" class="about section">
+    <section id="about" class="about section" data-visual="assets/img/header-photo.jpg">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
@@ -96,7 +136,7 @@
     </section><!-- /About Section -->
 
     <!-- Skills Section-->
-    <section id="skills" class="skills section" style="margin-top: -30px;">
+    <section id="skills" class="skills section" style="margin-top: -30px;" data-visual="assets/img/header-photo.jpg">
       <div class="container section-title" data-aos="fade-up">
         <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 20px;">Skills</h2>
         <div class="skills-list d-flex flex-wrap gap-2">
@@ -120,7 +160,7 @@
     </section>
 
     <!-- Resume Section -->
-    <section id="resume" class="resume section">
+    <section id="resume" class="resume section" data-visual="assets/img/header-photo.jpg">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
@@ -185,7 +225,7 @@
     </section><!-- /Resume Section -->
 
     <!-- Portfolio Section -->
-    <section id="portfolio" class="portfolio section">
+    <section id="portfolio" class="portfolio section" data-visual="assets/img/Portfolio/ecommerce.jpg">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
@@ -305,7 +345,7 @@
     </section><!-- /Portfolio Section -->
 
     <!-- Contact Section -->
-    <section id="contact" class="contact section">
+    <section id="contact" class="contact section" data-visual="assets/img/header-photo.jpg">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
@@ -428,6 +468,45 @@
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- Side Visual: swap image based on which section is active -->
+  <script>
+    (function () {
+      const sideImg = document.getElementById('side-visual-img');
+      const sections = document.querySelectorAll('section[data-visual]');
+      if (!sideImg || !sections.length) return;
+
+      let currentSrc = sideImg.getAttribute('src');
+
+      const observer = new IntersectionObserver((entries) => {
+        // Pick the entry that is most visible right now
+        let mostVisible = null;
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (!mostVisible || entry.intersectionRatio > mostVisible.intersectionRatio) {
+              mostVisible = entry;
+            }
+          }
+        });
+
+        if (mostVisible) {
+          const newSrc = mostVisible.target.getAttribute('data-visual');
+          if (newSrc && newSrc !== currentSrc) {
+            currentSrc = newSrc;
+            sideImg.classList.add('is-hidden');
+            setTimeout(() => {
+              sideImg.setAttribute('src', newSrc);
+              sideImg.classList.remove('is-hidden');
+            }, 300);
+          }
+        }
+      }, {
+        threshold: [0.3, 0.5, 0.7]
+      });
+
+      sections.forEach((section) => observer.observe(section));
+    })();
+  </script>
 
 </body>
 
