@@ -27,37 +27,20 @@
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
 
-  <!-- Side Visual (image that changes per active section) -->
+  <!-- Sliding Nav Indicator (highlight glides between icons as you scroll) -->
   <style>
-    .side-visual {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 55%;
-      height: 100vh;
-      overflow: hidden;
-      z-index: 0;
-      pointer-events: none;
+    #navmenu {
+      position: relative;
     }
-    .side-visual img {
+    .nav-indicator {
       position: absolute;
-      top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top center;
-      opacity: 1;
-      transition: opacity 0.6s ease-in-out;
-    }
-    .side-visual img.is-hidden {
-      opacity: 0;
-    }
-    /* Hide on smaller screens since the nav sidebar also collapses there */
-    @media (max-width: 1200px) {
-      .side-visual {
-        display: none;
-      }
+      width: 4px;
+      border-radius: 4px;
+      background-color: var(--accent-color, #2469ff);
+      transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1), height 0.45s ease;
+      pointer-events: none;
+      z-index: 2;
     }
   </style>
 
@@ -71,11 +54,6 @@
 </head>
 
 <body class="index-page">
-
-  <!-- Side Visual: image swaps automatically based on the section in view -->
-  <div class="side-visual">
-    <img src="assets/img/header-photo.jpg" alt="" id="side-visual-img">
-  </div>
 
   <header id="header" class="header d-flex flex-column justify-content-center">
 
@@ -97,10 +75,9 @@
   <main class="main">
 
     <!-- Hero Section -->
-    <section id="hero" class="hero section light-background" data-visual="assets/img/header-photo.jpg">
+    <section id="hero" class="hero section light-background">
 
-      <img src="assets/img/header-photo.jpg" alt="" style="display:none;">
-      <!-- Original photo hidden here; it now lives in the fixed .side-visual panel and updates per section -->
+      <img src="assets/img/header-photo.jpg" alt="" style="object-fit: contain; object-position: bottom center; max-height: 90vh; width: 100%;">
 
       <div class="container" data-aos="zoom-out">
         <div class="row justify-content-center">
@@ -124,7 +101,7 @@
     </section><!-- /Hero Section -->
 
     <!-- About Section -->
-    <section id="about" class="about section" data-visual="assets/img/header-photo.jpg">
+    <section id="about" class="about section">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
@@ -136,7 +113,7 @@
     </section><!-- /About Section -->
 
     <!-- Skills Section-->
-    <section id="skills" class="skills section" style="margin-top: -30px;" data-visual="assets/img/header-photo.jpg">
+    <section id="skills" class="skills section" style="margin-top: -30px;">
       <div class="container section-title" data-aos="fade-up">
         <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 20px;">Skills</h2>
         <div class="skills-list d-flex flex-wrap gap-2">
@@ -160,7 +137,7 @@
     </section>
 
     <!-- Resume Section -->
-    <section id="resume" class="resume section" data-visual="assets/img/header-photo.jpg">
+    <section id="resume" class="resume section">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
@@ -225,7 +202,7 @@
     </section><!-- /Resume Section -->
 
     <!-- Portfolio Section -->
-    <section id="portfolio" class="portfolio section" data-visual="assets/img/Portfolio/ecommerce.jpg">
+    <section id="portfolio" class="portfolio section">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
@@ -345,7 +322,7 @@
     </section><!-- /Portfolio Section -->
 
     <!-- Contact Section -->
-    <section id="contact" class="contact section" data-visual="assets/img/header-photo.jpg">
+    <section id="contact" class="contact section">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
@@ -469,42 +446,45 @@
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
 
-  <!-- Side Visual: swap image based on which section is active -->
+  <!-- Sliding Nav Indicator: glides to the active section's icon -->
   <script>
     (function () {
-      const sideImg = document.getElementById('side-visual-img');
-      const sections = document.querySelectorAll('section[data-visual]');
-      if (!sideImg || !sections.length) return;
+      const navmenu = document.getElementById('navmenu');
+      if (!navmenu) return;
+      const navLinks = navmenu.querySelectorAll('ul > li > a');
+      if (!navLinks.length) return;
 
-      let currentSrc = sideImg.getAttribute('src');
+      const indicator = document.createElement('span');
+      indicator.className = 'nav-indicator';
+      navmenu.appendChild(indicator);
 
-      const observer = new IntersectionObserver((entries) => {
-        // Pick the entry that is most visible right now
-        let mostVisible = null;
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            if (!mostVisible || entry.intersectionRatio > mostVisible.intersectionRatio) {
-              mostVisible = entry;
-            }
-          }
-        });
+      function moveIndicatorTo(link) {
+        if (!link) return;
+        const icon = link.querySelector('.navicon') || link;
+        const navRect = navmenu.getBoundingClientRect();
+        const iconRect = icon.getBoundingClientRect();
+        indicator.style.height = iconRect.height + 'px';
+        indicator.style.transform = 'translateY(' + (iconRect.top - navRect.top) + 'px)';
+      }
 
-        if (mostVisible) {
-          const newSrc = mostVisible.target.getAttribute('data-visual');
-          if (newSrc && newSrc !== currentSrc) {
-            currentSrc = newSrc;
-            sideImg.classList.add('is-hidden');
-            setTimeout(() => {
-              sideImg.setAttribute('src', newSrc);
-              sideImg.classList.remove('is-hidden');
-            }, 300);
-          }
-        }
-      }, {
-        threshold: [0.3, 0.5, 0.7]
+      function getActiveLink() {
+        return navmenu.querySelector('ul > li > a.active') || navLinks[0];
+      }
+
+      // Position the indicator once layout/fonts have settled
+      window.addEventListener('load', () => moveIndicatorTo(getActiveLink()));
+      setTimeout(() => moveIndicatorTo(getActiveLink()), 300);
+
+      // The existing scroll-spy script (main.js) toggles the "active" class
+      // on the nav link as you scroll — we just watch for that change and
+      // glide our indicator to match, instead of re-implementing scrollspy.
+      const classObserver = new MutationObserver(() => moveIndicatorTo(getActiveLink()));
+      navLinks.forEach((link) => {
+        classObserver.observe(link, { attributes: true, attributeFilter: ['class'] });
       });
 
-      sections.forEach((section) => observer.observe(section));
+      // Keep it aligned if the window is resized
+      window.addEventListener('resize', () => moveIndicatorTo(getActiveLink()));
     })();
   </script>
 
